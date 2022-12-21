@@ -1,0 +1,99 @@
+﻿name,domain,type,country
+360,360.cn,Provider,China
+35.com ,cn4e.com,Provider,China
+A2hosting,a2hosting.com,Provider,United States
+Alibaba,aliyun.com,Provider,China
+Alibaba,mxhichina.com,Provider,China
+Amazon Workmail,amazonaws.com,Provider,United States
+Amazon Workmail,awsapps.com,Provider,United States
+AOL,aim.com,Provider,United States
+Appriver,appriver.com,Security,United States
+Appriver,arsmtp.com,Security,United States
+Barracuda,barracuda.com,Security,United States
+Barracuda,barracudanetworks.com,Security,United States
+Bluehost,bluehost.com,Provider,United States
+Cisco,iphmx.com,Security,United States
+Coremail,icoremail.net,Provider,China
+CSC,cscdns.net,Security,United States
+Cyren,ctmail.com,Security,Israel
+Dreamhost,dreamhost.com,Provider,United States
+Edgewave,rcimx.com,Security,United States
+Edgewave,rcimx.net,Security,United States
+Fastmail,messagingengine.com,Provider,Australia
+FireEye,fireeyecloud.com,Security,United States
+FireEye,fireeyegov.com,Security,United States
+ForcePoint,mailcontrol.com,Security,United States
+Gandi,gandi.net,Provider,France
+GMX,gmx.net,Provider,Germany
+GoDaddy,secureserver.net,Provider,United States
+Google,google.com,Provider,United States
+Google,googlemail.com,Provider,United States
+Google,smtp.goog,Provider,United States
+Greatmail,greatmail.com,Provider,India
+Hornetsecurity,everycloudtech.com,Security,Germany
+Hornetsecurity,everycloudtech.us,Security,Germany
+Hornetsecurity,futurespam.com,Security,Germany
+Hornetsecurity,hornetsecurity.com,Security,Germany
+Hostgator,hostgator.com,Provider,United States
+Hostinger,hostinger.com,Provider,Lithuania
+Hushmail,hushmail.com,Provider,Canada
+iCloud,icloud.com,Provider,United States
+Intermedia,severdata.net,Provider,United States
+lonos,ionos.com,Provider,Germany
+lonos,schlund.de,Provider,Germany
+VK Company Ltd,mail.ru,Provider,Russia
+Mailguard,mailguard.com,Security,Australia
+Mailgun,mailgun.org,Security,United States
+McAfee,mcafee.com,Security,United States
+Microsoft,hotmail.com,Provider,United States
+Microsoft,outlook.com,Provider,United States
+Microsoft,outlook.cn,Provider,United States
+Microsoft,office365.us,Provider,United States
+Mimecast,mimecast-offshore.com,Security,United Kingdom
+Mimecast,mimecast.co.za,Security,United Kingdom
+Mimecast,mimecast.com,Security,United Kingdom
+MXroute,mxrouting.net,Provider,United States
+N-able,antispamcloud.com,Security,United States
+N-able,spamexperts.com,Security,United States
+net263,263.net,Provider,China
+net263,263xmail.com,Provider,China
+NetEase,netease.com,Provider,China
+OVH,ovh.net,Provider,France
+Postmark,postmarkapp.com,Provider,United States
+ProofPoint,ppe-hosted.com,Security,United States
+ProofPoint,pphosted.com,Security,United States
+ProofPoint,ppops.net,Security,United States
+ProofPoint,gpphosted.com,Security,United States
+Protonmail,mailanyone.net,Security,Switzerland
+Protonmail,protonmail.ch,Security,Switzerland
+Rackspace,emailsrvr.com,Provider,United States
+Sendgrid,sendgrid.net,Provider,United States
+Shanghai Qingyu,corp-email.cn,Provider,China
+Shanghai Qingyu,corpemail.net,Provider,China
+Shanghai Qingyu,corpsmtp.cn,Provider,China
+Shanghai Qingyu,corpsmtp.net,Provider,China
+SiteGround,mailspamprotection.com,Security,Bulgaria
+Sophos,reflexion.net,Security,United Kingdom
+Sophos,sophos.com,Security,United Kingdom
+SpamHaus,deteque.com,Security,United Kingdom
+Spamhero,mxthunder.com,Security,United States
+Spamhero,mxthunder.net,Security,United States
+Spamhero,spamhero.com,Security,United States
+Spamhero,spamhero.net,Security,United States
+Spamtitan,spamtitan.com,Security,Ireland
+Strato,rzone.de,Provider,Germany
+Symantec,messagelabs.com,Security,United States
+Tencent,qq.com,Provider,China
+TrendMicro,trendmicro.com,Security,United States
+TrendMicro,trendmicro.eu,Security,United States
+Tucows,hostedemail.com,Provider,Canada
+Tutanota,tutanota.de,Security,Germany
+United Internet,1and1.com,Provider,Germany
+Vadesecure,vadesecure.com,Security,France
+Yahoo,yahoo.com,Provider,United States
+Yahoo,yahoodns.net,Provider,United States
+Yandex,yandex-team.ru,Provider,Russia
+Yandex,yandex.com,Provider,Russia
+Yandex,yandex.net,Provider,Russia
+Zohomail,zoho.eu,Provider,India
+Zohomail,zohomail.com,Provider,India

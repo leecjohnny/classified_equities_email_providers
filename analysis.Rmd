@@ -1,0 +1,279 @@
+---
+title: "MX dns records analysis"
+author: Johnny Lee
+date: "Dec 17, 2022"
+output: html_notebook
+---
+
+
+```{r setup}
+library(tidyverse)
+library(readxl)
+library(urltools)
+library(jsonlite)
+library(furrr)
+library(pingr)
+setwd("/Users/johnny/Google Drive/My Drive/B-School/Classes/Fall 2022/Cyberspace in Strategy and Grand Strategy/Research Paper")
+```
+
+```{r wrangle index data}
+index_paths <- list.files("Data/Indices")
+
+read_refinitiv_output <- function(filename)
+{
+  df <- read_excel(paste0("Data/Indices/", filename)) %>%
+    mutate(index_name = str_split_1(filename, "[.]")[1])
+  return(df)
+}
+
+extract_domain <- function(string, email = FALSE)
+{
+  if(!is.na(string) & !email)
+  {  
+    se <- suffix_extract(domain(string))
+    return(paste0(c(se$domain, se$suffix), collapse = "."))
+  }
+  else if (!is.na(string) & email){
+    return(str_split_1(string, "@")[2])
+  }
+  else 
+  {
+    return(NA)
+  }
+}
+
+
+all_equities <- index_paths %>%
+  map(read_refinitiv_output) %>%
+  reduce(union_all) %>%
+  rename_all( ~ tolower(str_replace_all(str_trim(
+    str_replace_all(., regex("\\W+"), " ")
+  ), " ", "_"))) %>%
+  filter(!is.na(ticker_symbol)) %>%
+  mutate(company_hostname = map_chr(organization_website, extract_domain),
+         email_hostname = map_chr(contact_email_address, ~ extract_domain(., TRUE)))
+
+```
+
+```{r retrieve website answers}
+web_hostnames <- all_equities %>%
+  filter(!is.na(company_hostname)) %>%
+  distinct(company_hostname) %>%
+  rename(hostname = company_hostname)
+
+contact_hostnames <- all_equities %>%
+  filter(!is.na(email_hostname)) %>%
+  distinct(email_hostname) %>%
+  rename(hostname = email_hostname)
+
+all_hostnames <- web_hostnames %>%
+  union(contact_hostnames)
+  
+
+request_mx_answers <- function(host, dns_server = "1.1.1.1", rr_type = 15L) {
+  tryCatch(
+    {
+      answer <- nsl(host, server = dns_server, type = rr_type)$answer
+      return(unlist(answer$data))
+    },
+    error=function(cond){
+      return(NA)
+    }
+  )
+}
+
+flatten_mx_answers <- function(answers) {
+  map_chr(answers, extract_domain) %>%
+    unique() %>%
+    return()
+}
+
+plan(multisession)
+
+# Uncomment to re-scan DNS live
+# hostname_mx_domain_map <- all_hostnames %>%
+#   mutate(answers = future_map(hostname, ~ flatten_mx_answers(request_mx_answers(.)))) %>%
+#   unnest(answers) %>%
+#   filter(!is.na(answers)) %>%
+#   rename(mx_domain = answers)
+# 
+# hostname_mx_domain_map %>%
+#   write_csv("Data/hostname_mx_domain_map.csv")
+
+hostname_mx_domain_map <- read_csv("Data/hostname_mx_domain_map.csv") 
+```
+
+```{r build mx host provider map from mx inference}
+## Created using a modified version of https://github.com/ucsdsysnet/mx_inference 
+## The output from the inference algorithim was modified format into a json object for 
+inference_json <- "Data/mx_inference_output_dec_17_22.txt"
+
+inference_list <- read_json(inference_json)
+
+flatten_item <- function(domain) {
+  if (!is.na(domain$domain_name)) {
+    
+    len_pids <- length(domain$pid_list)
+    if (len_pids > 0) {
+      pids <- map_df(domain$pid_list, function(x) {
+        pid <- x$pid
+        conf_score <- x$conf_score
+        suggested_company <-
+          ifelse(is.null(x$suggested_company),
+                 NA,
+                 x$suggested_company)
+        df <- data.frame(pid,
+                         conf_score,
+                         suggested_company)
+        return(df)
+        }) %>%
+          unique()
+      return(
+        tibble(
+          domain_name = domain$domain_name,
+          pids = pids
+        ) %>%
+          unnest(cols = c(pids))
+      )
+    }
+  }
+  else
+    return(NA)
+}
+
+inference_df <- inference_list  %>%
+  map(flatten_item) %>%
+  reduce(union_all) %>%
+  unique()
+
+## converting the provider names from UCSD's methods into my naming convention
+inference_to_provider_map <- read_csv("Data/inference_to_provider_map.csv", show_col_types = FALSE)
+domain_map <- read_csv("Data/domain_provider_map.csv", show_col_types = FALSE)
+
+hostname_to_inference_providers <- inference_df %>%
+  left_join(inference_to_provider_map, by = c("suggested_company" = "inference_name")) %>%
+  transmute(
+    hostname = domain_name,
+    name = company_name
+  ) %>%
+  unique() %>%
+  filter(!is.na(name))  %>%
+  left_join(domain_map) %>%
+  select(hostname, name, type, country) %>%
+  unique()
+```
+
+
+```{r analyze mx domains}
+self_host <- hostname_mx_domain_map %>%
+  filter(hostname == mx_domain |
+           suffix_extract(domain(hostname))$domain == suffix_extract(domain(mx_domain))$domain) %>%
+  distinct(hostname) %>%
+  mutate(self = 1)
+
+exclude_list <-
+  tribble(
+    ~hostname, ~name, ~exclude,
+    "essexapartmenthomes.com", "Mailgun", 1
+  )
+
+inferred_map <- hostname_mx_domain_map %>%
+  inner_join(hostname_to_inference_providers) %>%
+  select(-mx_domain) %>%
+  unique()
+
+simple_mx_map <- hostname_mx_domain_map %>%
+  filter(!(hostname %in% inferred_map$hostname)) %>%
+  inner_join(domain_map, by = c("mx_domain" = "domain")) %>%
+  select(-mx_domain) %>%
+  unique()
+
+inferred_hostname_map <- inferred_map %>%
+  union_all(simple_mx_map)
+  
+hostname_mx_domain_map_sanitized <- all_hostnames %>%
+  left_join(inferred_hostname_map, by = c("hostname" = "hostname")) %>%
+  left_join(self_host, by = c("hostname" = "hostname")) %>%
+  left_join(exclude_list) %>%
+  filter(is.na(exclude)) %>%
+  select(-exclude)
+
+hostname_mx_domain_map_sanitized %>%
+  summarise(
+    n = n(),
+    n_d = n_distinct(hostname)
+  )
+  
+```
+
+```{r equity analysis}
+
+mx_country_group_map <- read_csv("Data/mx_country_group_map.csv")
+mx_managed_provider_map <- read_csv("Data/mx_managed_provider_list.csv")
+
+classified_equities <- all_equities %>%
+  left_join(hostname_mx_domain_map_sanitized, by = c("company_hostname" = "hostname"), keep = TRUE) %>%
+  left_join(hostname_mx_domain_map_sanitized, by = c("email_hostname" = "hostname"), keep = TRUE) %>%
+  mutate(
+    mx_company_name = coalesce(name.x,name.y),
+    mx_country = coalesce(country.x,country.y),
+    mx_type = coalesce(type.x,type.y),
+    self = coalesce(self.x,self.y)
+  ) %>%
+  mutate(
+    mx_company_name =  case_when(
+      is.na(mx_company_name) & self ~ company_name,
+      is.na(mx_company_name) ~ "Unknown",
+      TRUE ~ mx_company_name
+    ),
+    mx_type = case_when(
+      mx_company_name == "Unknown" ~ "Unknown",
+      is.na(mx_type) ~ "Provider",
+      TRUE ~ mx_type
+    ),
+    mx_country = case_when(
+      mx_company_name == "Unknown" ~ "Unknown",
+      is.na(mx_country) & self == 1 ~ country_of_headquarters,
+      TRUE ~ mx_country
+    )
+  ) %>%
+  mutate(
+    mx_country = if_else(mx_country %in% c("China (Mainland)", "Hong Kong"), "China", mx_country)
+  ) %>%
+  filter(
+    !(identifier_ric %in% c(
+      "GOOGL.OQ", # dual class
+      "NWS.OQ", # dual class
+      "FOX.OQ", # dual class
+      "MBC.N" # spun off
+    ))
+  ) %>%
+  left_join(mx_country_group_map, by = c("mx_country" = "mx_country")) %>%
+  mutate(
+    mx_type_group = case_when(
+      mx_company_name %in% mx_managed_provider_map$mx_company_name ~ "Managed",
+      mx_company_name == company_name ~ "Self",
+      TRUE ~ "Unknown"
+    )
+  )
+
+classified_equities %>%
+  select(
+    identifier_ric,
+    company_name,
+    ticker_symbol,
+    naics_sector_name,
+    organization_website,
+    contact_email_address,
+    country_of_headquarters,
+    index_name,
+    mx_company_name,
+    mx_country,
+    mx_type,
+    mx_country_group,
+    mx_type_group
+  ) %>%
+  write_csv("Output/Classified Equities.csv",
+            quote = "all",
+            na = "")
+```
