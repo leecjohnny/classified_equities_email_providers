@@ -1,4 +1,11 @@
-# Analyzing MX DNS Records to Identify Hosting Providers of Public Companies in the U.S., Europe, and China
+# US and European companies lean on Microsoft, Proofpoint to protect their inboxes
+
+Article: https://johnnyclee.com/i/us-and-european-companies-lean-on-microsoft-proof-Il8rea5-fCS/
+
+
+Repo description:
+
+Analyzing MX DNS Records to Identify Hosting Providers of Public Companies in the U.S., Europe, and China
 
 This repository contains code and data to analyze MX DNS records to identify hosting providers for a given set of company websites and email addresses. The analysis is done using a combination of data from Refinitiv, scanned DNS records, and SMTP server messages. 
 
